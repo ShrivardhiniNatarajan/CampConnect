@@ -9,6 +9,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const notificationAcceptanceRoutes = require('./routes/notificationAcceptanceRoutes');
 const campRoutes = require('./routes/campRoutes');
 const fundingRoutes = require('./routes/fundingRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 
@@ -30,5 +31,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/notifications', notificationAcceptanceRoutes);
 app.use('/api/camps', campRoutes);
 app.use('/api/funding', fundingRoutes);
+app.use('/api', reportRoutes);
 
 module.exports = app;
