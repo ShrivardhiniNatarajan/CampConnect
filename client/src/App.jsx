@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
+import Register from './pages/Register';
 
 // Social Worker Pages
 import SWDashboard from './pages/social_worker/Dashboard';
@@ -30,6 +31,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           <Route element={<MainLayout />}>
             {/* Social Worker Routes */}

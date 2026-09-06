@@ -2,7 +2,8 @@ const express = require('express');
 
 const {
   getFundableCamps,
-  getCampById
+  getCampById,
+  getMyCamps
 } = require('../controllers/campController');
 
 const authenticateToken = require('../middleware/authMiddleware');
@@ -15,6 +16,13 @@ router.get(
   authenticateToken,
   authorizeRoles('csr_admin'),
   getFundableCamps
+);
+
+router.get(
+  '/mine',
+  authenticateToken,
+  authorizeRoles('org_admin'),
+  getMyCamps
 );
 
 router.get(

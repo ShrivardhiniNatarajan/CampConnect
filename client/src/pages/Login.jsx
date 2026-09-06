@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { HeartPulse, Lock, Phone } from 'lucide-react';
 
 const Login = () => {
@@ -91,6 +92,9 @@ const Login = () => {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
+        <div className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account? <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-500">Sign up</Link>
+        </div>
       </div>
     </div>
   );
