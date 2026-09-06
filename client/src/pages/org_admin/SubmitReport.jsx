@@ -43,7 +43,7 @@ const SubmitReport = () => {
       setSuccess(res.data.message);
       setTimeout(() => navigate('/org-admin'), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting report');
+      const msg = err.response?.data?.message; setError(typeof msg === "string" ? msg : (msg?.message || "Error submitting report"));
       setLoading(false);
     }
   };

@@ -33,4 +33,8 @@ app.use('/api/camps', campRoutes);
 app.use('/api/funding', fundingRoutes);
 app.use('/api', reportRoutes);
 
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ success: false, message: typeof err.message === "string" ? err.message : (err.message?.message || "An internal server error occurred") });
+});
 module.exports = app;
