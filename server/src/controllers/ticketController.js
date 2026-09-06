@@ -278,8 +278,8 @@ const getTicketById = async (req, res) => {
         local_volunteer_count,
         additional_details,
         status,
-        created_at,
-        updated_at
+        created_at
+        
        FROM tickets
        WHERE ticket_id = ? AND social_worker_id = ?`,
       [id, socialWorkerId]
@@ -331,8 +331,8 @@ const getMyTickets = async (req, res) => {
         local_volunteer_count,
         additional_details,
         status,
-        created_at,
-        updated_at
+        created_at
+        
        FROM tickets
        WHERE social_worker_id = ?
        ORDER BY created_at DESC`,
