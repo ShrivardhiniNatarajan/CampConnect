@@ -35,6 +35,6 @@ app.use('/api', reportRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ success: false, message: typeof err.message === "string" ? err.message : (err.message?.message || "An internal server error occurred") });
+  let msg = typeof err.message === "string" ? err.message : (err.message?.message || "An internal server error occurred"); if (msg.toLowerCase().includes("api_key") || msg.toLowerCase().includes("cloudinary")) { msg = "Failed to upload proof photo. Please check Cloudinary configuration."; } res.status(500).json({ success: false, message: msg });
 });
 module.exports = app;
