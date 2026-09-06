@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../services/api';
+import api from '../../services/apiClient';
 
 const SubmitReport = () => {
   const [formData, setFormData] = useState({
