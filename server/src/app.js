@@ -6,6 +6,7 @@ const organizationRoutes = require('./routes/organizationRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const ticketAcceptanceRoutes = require('./routes/ticketAcceptanceRoutes');
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/tickets', ticketAcceptanceRoutes);
 
 module.exports = app;
