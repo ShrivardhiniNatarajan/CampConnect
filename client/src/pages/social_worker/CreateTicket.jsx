@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import api from '../../../services/api';
+import api from '../../services/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
