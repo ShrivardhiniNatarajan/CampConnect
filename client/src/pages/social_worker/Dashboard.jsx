@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../../services/apiClient';
+import api from '../../services/api';
 import { Ticket, Activity, CheckCircle, PackageCheck, Banknote, CalendarCheck } from 'lucide-react';
 
 const Dashboard = () => {

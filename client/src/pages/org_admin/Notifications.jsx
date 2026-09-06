@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/apiClient';
+import api from '../../services/api';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
