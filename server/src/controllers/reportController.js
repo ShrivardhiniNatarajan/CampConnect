@@ -12,7 +12,7 @@ const submitReport = async (req, res) => {
 
     let proof_document_url = req.body.proof_document_url;
     if (req.file && req.file.path) {
-      proof_document_url = req.file.path;
+      proof_document_url = 'http://localhost:5000/uploads/' + req.file.filename;
     }
 
     const id = camp_id; // Keep id variable for subsequent queries
