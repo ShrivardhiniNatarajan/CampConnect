@@ -6,7 +6,7 @@ const organizationRoutes = require('./routes/organizationRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-const ticketAcceptanceRoutes = require('./routes/ticketAcceptanceRoutes');
+const notificationAcceptanceRoutes = require('./routes/notificationAcceptanceRoutes');
 const campRoutes = require('./routes/campRoutes');
 const fundingRoutes = require('./routes/fundingRoutes');
 
@@ -27,7 +27,7 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/tickets', ticketAcceptanceRoutes);
+app.use('/api/notifications', notificationAcceptanceRoutes);
 app.use('/api/camps', campRoutes);
 app.use('/api/funding', fundingRoutes);
 
