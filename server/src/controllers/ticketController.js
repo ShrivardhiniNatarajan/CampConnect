@@ -251,6 +251,109 @@ const createTicket = async (req, res) => {
   }
 };
 
+const getTicketById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const socialWorkerId = req.user.user_id;
+
+    const [tickets] = await pool.query(
+      `SELECT
+        ticket_id,
+        social_worker_id,
+        ST_Y(gps_location) AS latitude,
+        ST_X(gps_location) AS longitude,
+        pincode,
+        expected_patient_count,
+        health_focus_area,
+        preferred_date_from,
+        preferred_date_to,
+        urgency,
+        village_head_consent,
+        venue_available,
+        venue_type,
+        local_contact_name,
+        local_contact_phone,
+        electricity_available,
+        water_available,
+        local_volunteer_count,
+        additional_details,
+        status,
+        created_at,
+        updated_at
+       FROM tickets
+       WHERE ticket_id = ? AND social_worker_id = ?`,
+      [id, socialWorkerId]
+    );
+
+    if (tickets.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found or unauthorized'
+      });
+    }
+
+    res.json({
+      success: true,
+      ticket: tickets[0]
+    });
+  } catch (error) {
+    console.error('Fetch ticket error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ticket'
+    });
+  }
+};
+
+const getMyTickets = async (req, res) => {
+  try {
+    const socialWorkerId = req.user.user_id;
+
+    const [tickets] = await pool.query(
+      `SELECT
+        ticket_id,
+        social_worker_id,
+        ST_Y(gps_location) AS latitude,
+        ST_X(gps_location) AS longitude,
+        pincode,
+        expected_patient_count,
+        health_focus_area,
+        preferred_date_from,
+        preferred_date_to,
+        urgency,
+        village_head_consent,
+        venue_available,
+        venue_type,
+        local_contact_name,
+        local_contact_phone,
+        electricity_available,
+        water_available,
+        local_volunteer_count,
+        additional_details,
+        status,
+        created_at,
+        updated_at
+       FROM tickets
+       WHERE social_worker_id = ?
+       ORDER BY created_at DESC`,
+      [socialWorkerId]
+    );
+
+    res.json({
+      success: true,
+      tickets
+    });
+  } catch (error) {
+    console.error('Fetch my tickets error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch tickets'
+    });
+  }
+};
+
 module.exports = {
-  createTicket
+  createTicket,
+  getTicketById,
+  getMyTickets
 };

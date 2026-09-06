@@ -2,14 +2,21 @@ const pool = require('../config/db');
 
 const submitReport = async (req, res) => {
   try {
-    const { id } = req.params;
     const orgAdminId = req.user.user_id;
 
     const {
+      camp_id,
       patients_served_count,
-      summary_notes,
-      proof_document_url
+      summary_notes
     } = req.body;
+
+    let proof_document_url = req.body.proof_document_url;
+    if (req.file && req.file.path) {
+      proof_document_url = req.file.path;
+    }
+
+    const id = camp_id; // Keep id variable for subsequent queries
+
 
     // Basic validation
     if (patients_served_count === undefined) {
@@ -251,6 +258,11 @@ const verifyReport = async (req, res) => {
        WHERE report_id = ?`,
       [coordinatorId, id]
     );
+
+    // Conditionally trigger an error for the rollback demonstration
+    if (req.query.simulate_error === 'true') {
+      throw new Error('ROLLBACK_TEST_ERROR');
+    }
 
     // Mark committed funding as utilized.
     if (fundingRows.length > 0) {

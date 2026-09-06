@@ -8,8 +8,17 @@ const {
 
 const authenticateToken = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/roleMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
+
+router.post(
+  '/reports',
+  authenticateToken,
+  authorizeRoles('org_admin'),
+  upload.single('proof_photo'),
+  submitReport
+);
 
 router.post(
   '/reports/:id/verify',

@@ -1,0 +1,285 @@
+{
+  "info": {
+    "name": "CampConnect API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/health"
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"User\",\"phone\":\"111\",\"password\":\"pass\",\"role\":\"social_worker\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"phone\":\"111\",\"password\":\"pass\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{socialWorkerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"expected_patient_count\":100,\"health_focus_area\":\"Eye\",\"preferred_date_from\":\"2026-10-01\",\"preferred_date_to\":\"2026-10-10\",\"local_contact_name\":\"John\",\"local_contact_phone\":\"999\",\"pincode\":\"400001\",\"latitude\":18.9,\"longitude\":72.8}"
+            },
+            "url": "{{baseUrl}}/api/tickets"
+          }
+        },
+        {
+          "name": "Mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{socialWorkerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tickets/mine"
+          }
+        },
+        {
+          "name": "By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{socialWorkerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tickets/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{orgAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/mine"
+          }
+        },
+        {
+          "name": "Accept",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{orgAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/1/accept"
+          }
+        },
+        {
+          "name": "Reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{orgAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/1/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Camps",
+      "item": [
+        {
+          "name": "Fundable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{csrAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/camps/fundable"
+          }
+        },
+        {
+          "name": "By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{orgAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/camps/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Funding",
+      "item": [
+        {
+          "name": "Fund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{csrAdminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"company_id\":1,\"camp_id\":1,\"amount\":5000}"
+            },
+            "url": "{{baseUrl}}/api/funding"
+          }
+        },
+        {
+          "name": "Mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{csrAdminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/funding/mine"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{orgAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "camp_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "patients_served_count",
+                  "value": "100",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Pending",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{coordinatorToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reports/pending"
+          }
+        },
+        {
+          "name": "Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{coordinatorToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reports/1/verify"
+          }
+        }
+      ]
+    }
+  ]
+}
