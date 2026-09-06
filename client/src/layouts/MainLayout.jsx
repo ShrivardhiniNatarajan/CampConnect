@@ -22,7 +22,8 @@ const MainLayout = () => {
     org_admin: [
       { path: '/org-admin', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5 mr-3" /> },
       { path: '/org-admin/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5 mr-3" /> },
-      { path: '/org-admin/reports/submit', label: 'Submit Report', icon: <FileText className="w-5 h-5 mr-3" /> }
+      { path: '/org-admin/reports/submit', label: 'Submit Report', icon: <FileText className="w-5 h-5 mr-3" /> },
+      { path: '/org-admin/history', label: 'History', icon: <History className="w-5 h-5 mr-3" /> }
     ],
     csr_admin: [
       { path: '/csr-admin', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5 mr-3" /> },
@@ -31,7 +32,8 @@ const MainLayout = () => {
     ],
     coordinator: [
       { path: '/coordinator', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5 mr-3" /> },
-      { path: '/coordinator/reports/pending', label: 'Pending Reports', icon: <CheckSquare className="w-5 h-5 mr-3" /> }
+      { path: '/coordinator/reports/pending', label: 'Pending Reports', icon: <CheckSquare className="w-5 h-5 mr-3" /> },
+      { path: '/coordinator/history', label: 'History', icon: <History className="w-5 h-5 mr-3" /> }
     ]
   };
 

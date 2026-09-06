@@ -15,6 +15,7 @@ import MyTickets from './pages/social_worker/MyTickets';
 import OADashboard from './pages/org_admin/Dashboard';
 import Notifications from './pages/org_admin/Notifications';
 import SubmitReport from './pages/org_admin/SubmitReport';
+import OrgHistory from './pages/org_admin/History';
 
 // CSR Admin Pages
 import CSRDashboard from './pages/csr_admin/Dashboard';
@@ -24,6 +25,7 @@ import FundingHistory from './pages/csr_admin/FundingHistory';
 // Coordinator Pages
 import CoordDashboard from './pages/coordinator/Dashboard';
 import PendingReports from './pages/coordinator/PendingReports';
+import CoordHistory from './pages/coordinator/History';
 
 function App() {
   return (
@@ -46,6 +48,7 @@ function App() {
               <Route path="/org-admin" element={<OADashboard />} />
               <Route path="/org-admin/notifications" element={<Notifications />} />
               <Route path="/org-admin/reports/submit" element={<SubmitReport />} />
+              <Route path="/org-admin/history" element={<OrgHistory />} />
             </Route>
 
             {/* CSR Admin Routes */}
@@ -59,6 +62,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['coordinator']} />}>
               <Route path="/coordinator" element={<CoordDashboard />} />
               <Route path="/coordinator/reports/pending" element={<PendingReports />} />
+              <Route path="/coordinator/history" element={<CoordHistory />} />
             </Route>
           </Route>
 

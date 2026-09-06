@@ -330,7 +330,20 @@ const verifyReport = async (req, res) => {
   }
 };
 
-module.exports = {
+const getVerifiedReports = async (req, res) => {
+  try {
+    const [reports] = await pool.query(
+      "SELECT cr.report_id, cr.camp_id, cr.patients_served_count, cr.summary_notes, cr.proof_document_url, cr.verified_at, c.ticket_id, o.name AS organization_name FROM camp_reports cr INNER JOIN camps c ON c.camp_id = cr.camp_id INNER JOIN organizations o ON o.org_id = c.org_id WHERE cr.verified = TRUE AND cr.verified_by = ? ORDER BY cr.verified_at DESC",
+      [req.user.user_id]
+    );
+    res.json({ success: true, reports });
+  } catch (error) {
+    console.error('Verified reports fetch error:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch verified reports' });
+  }
+};
+
+module.exports = { getVerifiedReports,
   submitReport,
   getPendingReports,
   verifyReport

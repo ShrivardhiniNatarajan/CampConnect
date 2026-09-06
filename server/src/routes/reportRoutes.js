@@ -3,6 +3,7 @@ const express = require('express');
 const {
   submitReport,
   getPendingReports,
+  getVerifiedReports,
   verifyReport
 } = require('../controllers/reportController');
 
@@ -32,6 +33,13 @@ router.get(
   authenticateToken,
   authorizeRoles('coordinator'),
   getPendingReports
+);
+
+router.get(
+  '/reports/verified',
+  authenticateToken,
+  authorizeRoles('coordinator'),
+  getVerifiedReports
 );
 
 module.exports = router;
