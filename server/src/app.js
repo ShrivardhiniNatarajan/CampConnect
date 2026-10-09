@@ -10,6 +10,7 @@ const notificationAcceptanceRoutes = require('./routes/notificationAcceptanceRou
 const campRoutes = require('./routes/campRoutes');
 const fundingRoutes = require('./routes/fundingRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const trustRoutes = require('./routes/trustRoutes');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/notifications', notificationAcceptanceRoutes);
 app.use('/api/camps', campRoutes);
 app.use('/api/funding', fundingRoutes);
+app.use('/api/trust', trustRoutes);
 app.use('/api', reportRoutes);
 
 app.use((err, req, res, next) => {

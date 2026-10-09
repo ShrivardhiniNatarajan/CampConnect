@@ -84,11 +84,13 @@ const MyTickets = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
+              <div className="pt-4 border-t border-gray-100 flex flex-wrap justify-between items-center text-sm gap-2">
                 <span className="text-gray-400">Created {new Date(ticket.created_at).toLocaleDateString()}</span>
-                <span className={`font-medium capitalize ${ticket.urgency === 'high' ? 'text-red-600' : ticket.urgency === 'medium' ? 'text-yellow-600' : 'text-green-600'}`}>
-                  {ticket.urgency} Urgency
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className={`font-medium capitalize ${ticket.urgency === 'high' ? 'text-red-600' : ticket.urgency === 'medium' ? 'text-yellow-600' : 'text-green-600'}`}>
+                    {ticket.urgency} Urgency
+                  </span>
+                </div>
               </div>
             </div>
           ))

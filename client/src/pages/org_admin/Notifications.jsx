@@ -65,9 +65,21 @@ const Notifications = () => {
                       {notif.health_focus_area} Camp
                     </h3>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs uppercase font-bold border ${notif.urgency === 'high' ? 'bg-red-50 text-red-700 border-red-200' : notif.urgency === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
-                    {notif.urgency} Urgency
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {notif.trust_score && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center shadow-xs ${
+                        notif.trust_score >= 80 ? 'bg-green-50 text-green-700 border-green-200' :
+                        notif.trust_score >= 55 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        'bg-red-50 text-red-700 border-red-200'
+                      }`} title={notif.trust_analysis?.recommendation || ''}>
+                        <Activity className="w-3.5 h-3.5 mr-1" />
+                        Credibility Score: {notif.trust_score}% ({notif.trust_level})
+                      </span>
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-xs uppercase font-bold border ${notif.urgency === 'high' ? 'bg-red-50 text-red-700 border-red-200' : notif.urgency === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                      {notif.urgency} Urgency
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl">
