@@ -1,40 +1,46 @@
 const pool = require('../config/db');
+const {
+  submitInMemoryReport,
+  getInMemoryPendingReports,
+  verifyInMemoryReport,
+  getInMemoryVerifiedReports
+} = require('../services/inMemoryStore');
+const { isDbOffline } = require('../utils/dbFallback');
 
 const submitReport = async (req, res) => {
+  const orgAdminId = req.user.user_id;
+
+  const {
+    camp_id,
+    patients_served_count,
+    summary_notes
+  } = req.body;
+
+  let proof_document_url = req.body.proof_document_url;
+  if (req.file && req.file.path) {
+    proof_document_url = 'http://localhost:5000/uploads/' + req.file.filename;
+  }
+
+  const id = camp_id;
+
+  // Basic validation
+  if (patients_served_count === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'patients_served_count is required'
+    });
+  }
+
+  const patientsServed = Number(patients_served_count);
+
+  if (!Number.isInteger(patientsServed) || patientsServed < 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'patients_served_count must be a non-negative integer'
+    });
+  }
+
   try {
-    const orgAdminId = req.user.user_id;
-
-    const {
-      camp_id,
-      patients_served_count,
-      summary_notes
-    } = req.body;
-
-    let proof_document_url = req.body.proof_document_url;
-    if (req.file && req.file.path) {
-      proof_document_url = 'http://localhost:5000/uploads/' + req.file.filename;
-    }
-
-    const id = camp_id; // Keep id variable for subsequent queries
-
-
-    // Basic validation
-    if (patients_served_count === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: 'patients_served_count is required'
-      });
-    }
-
-    const patientsServed = Number(patients_served_count);
-
-    if (!Number.isInteger(patientsServed) || patientsServed < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'patients_served_count must be a non-negative integer'
-      });
-    }
-
     // Verify that the camp belongs to this organization's admin
     const [camps] = await pool.query(
       `SELECT
@@ -114,6 +120,22 @@ const submitReport = async (req, res) => {
       }
     });
   } catch (error) {
+    if (isDbOffline(error)) {
+      try {
+        const report = submitInMemoryReport(id, orgAdminId, patientsServed, summary_notes, proof_document_url);
+        return res.status(201).json({
+          success: true,
+          message: 'Camp report submitted successfully',
+          report
+        });
+      } catch (memErr) {
+        return res.status(memErr.status || 500).json({
+          success: false,
+          message: memErr.message || 'Failed to submit camp report'
+        });
+      }
+    }
+
     console.error('Report submission error:', error.message);
 
     res.status(500).json({
@@ -163,6 +185,14 @@ const getPendingReports = async (req, res) => {
       reports
     });
   } catch (error) {
+    if (isDbOffline(error)) {
+      const reports = getInMemoryPendingReports();
+      return res.json({
+        success: true,
+        reports
+      });
+    }
+
     console.error('Pending reports fetch error:', error.message);
 
     res.status(500).json({
@@ -173,13 +203,13 @@ const getPendingReports = async (req, res) => {
 };
 
 const verifyReport = async (req, res) => {
-  const connection = await pool.getConnection();
+  const { id } = req.params;
+  const coordinatorId = req.user.user_id;
 
+  let connection;
   try {
+    connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    const { id } = req.params;
-    const coordinatorId = req.user.user_id;
 
     // Lock the report so it cannot be verified twice concurrently.
     const [reports] = await connection.query(
@@ -317,7 +347,25 @@ const verifyReport = async (req, res) => {
       }
     });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      try { await connection.rollback(); } catch {}
+    }
+
+    if (isDbOffline(error)) {
+      try {
+        const result = verifyInMemoryReport(id, coordinatorId);
+        return res.json({
+          success: true,
+          message: 'Report verified and camp workflow completed successfully',
+          ...result
+        });
+      } catch (memErr) {
+        return res.status(memErr.status || 500).json({
+          success: false,
+          message: memErr.message || 'Report verification failed'
+        });
+      }
+    }
 
     console.error('Report verification error:', error.message);
 
@@ -326,24 +374,45 @@ const verifyReport = async (req, res) => {
       message: 'Report verification failed'
     });
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
 const getVerifiedReports = async (req, res) => {
   try {
     const [reports] = await pool.query(
-      "SELECT cr.report_id, cr.camp_id, cr.patients_served_count, cr.summary_notes, cr.proof_document_url, cr.verified_at, c.ticket_id, o.name AS organization_name FROM camp_reports cr INNER JOIN camps c ON c.camp_id = cr.camp_id INNER JOIN organizations o ON o.org_id = c.org_id WHERE cr.verified = TRUE AND cr.verified_by = ? ORDER BY cr.verified_at DESC",
+      `SELECT
+        cr.report_id,
+        cr.camp_id,
+        cr.patients_served_count,
+        cr.summary_notes,
+        cr.proof_document_url,
+        cr.verified_at,
+        c.ticket_id,
+        o.name AS organization_name
+       FROM camp_reports cr
+       INNER JOIN camps c ON c.camp_id = cr.camp_id
+       INNER JOIN organizations o ON o.org_id = c.org_id
+       WHERE cr.verified = TRUE AND cr.verified_by = ?
+       ORDER BY cr.verified_at DESC`,
       [req.user.user_id]
     );
     res.json({ success: true, reports });
   } catch (error) {
+    if (isDbOffline(error)) {
+      const reports = getInMemoryVerifiedReports(req.user.user_id);
+      return res.json({ success: true, reports });
+    }
+
     console.error('Verified reports fetch error:', error.message);
     res.status(500).json({ success: false, message: 'Failed to fetch verified reports' });
   }
 };
 
-module.exports = { getVerifiedReports,
+module.exports = {
+  getVerifiedReports,
   submitReport,
   getPendingReports,
   verifyReport

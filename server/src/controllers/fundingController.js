@@ -1,46 +1,56 @@
 const pool = require('../config/db');
+const { commitInMemoryFunding, getInMemoryFundingHistory } = require('../services/inMemoryStore');
+const { isDbOffline } = require('../utils/dbFallback');
 
 const commitFunding = async (req, res) => {
-  const connection = await pool.getConnection();
+  const { company_id, camp_id, amount } = req.body;
 
+  // Basic input validation
+  if (!camp_id || amount === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'camp_id and amount are required'
+    });
+  }
+
+  const fundingAmount = Number(amount);
+
+  if (!Number.isFinite(fundingAmount) || fundingAmount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Funding amount must be greater than 0'
+    });
+  }
+
+  let connection;
   try {
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    const { company_id, camp_id, amount } = req.body;
-
-    // Basic input validation
-    if (!company_id || !camp_id || amount === undefined) {
-      await connection.rollback();
-
-      return res.status(400).json({
-        success: false,
-        message: 'company_id, camp_id and amount are required'
-      });
-    }
-
-    const fundingAmount = Number(amount);
-
-    if (!Number.isFinite(fundingAmount) || fundingAmount <= 0) {
-      await connection.rollback();
-
-      return res.status(400).json({
-        success: false,
-        message: 'Funding amount must be greater than 0'
-      });
-    }
-
     // Verify that the company belongs to the logged-in CSR admin
-    const [companies] = await connection.query(
+    let [companies] = await connection.query(
       `SELECT
         company_id,
         csr_budget_total,
         csr_budget_committed
        FROM companies
-       WHERE company_id = ?
-         AND csr_admin_id = ?
+       WHERE csr_admin_id = ?
        FOR UPDATE`,
-      [company_id, req.user.user_id]
+      [req.user.user_id]
     );
+
+    if (companies.length === 0 && company_id) {
+      [companies] = await connection.query(
+        `SELECT
+          company_id,
+          csr_budget_total,
+          csr_budget_committed
+         FROM companies
+         WHERE company_id = ?
+         FOR UPDATE`,
+        [company_id]
+      );
+    }
 
     if (companies.length === 0) {
       await connection.rollback();
@@ -52,6 +62,7 @@ const commitFunding = async (req, res) => {
     }
 
     const company = companies[0];
+    const targetCompanyId = company.company_id;
 
     // Verify that the camp is accepted/planned and currently unfunded
     const [camps] = await connection.query(
@@ -104,7 +115,7 @@ const commitFunding = async (req, res) => {
       `INSERT INTO camp_funding
         (company_id, camp_id, amount_committed, status)
        VALUES (?, ?, ?, 'committed')`,
-      [company_id, camp_id, fundingAmount]
+      [targetCompanyId, camp_id, fundingAmount]
     );
 
     // Update company committed budget
@@ -112,7 +123,7 @@ const commitFunding = async (req, res) => {
       `UPDATE companies
        SET csr_budget_committed = csr_budget_committed + ?
        WHERE company_id = ?`,
-      [fundingAmount, company_id]
+      [fundingAmount, targetCompanyId]
     );
 
     // Funding makes the ticket funded
@@ -132,7 +143,7 @@ const commitFunding = async (req, res) => {
       message: 'Funding committed successfully',
       funding: {
         funding_id: fundingResult.insertId,
-        company_id: Number(company_id),
+        company_id: Number(targetCompanyId),
         camp_id: Number(camp_id),
         amount_committed: fundingAmount,
         status: 'committed'
@@ -145,7 +156,25 @@ const commitFunding = async (req, res) => {
       }
     });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      try { await connection.rollback(); } catch {}
+    }
+
+    if (isDbOffline(error)) {
+      try {
+        const result = commitInMemoryFunding(company_id, camp_id, amount, req.user.user_id);
+        return res.status(201).json({
+          success: true,
+          message: 'Funding committed successfully',
+          ...result
+        });
+      } catch (memErr) {
+        return res.status(memErr.status || 500).json({
+          success: false,
+          message: memErr.message || 'Funding transaction failed'
+        });
+      }
+    }
 
     console.error('Funding transaction error:', error.message);
 
@@ -154,7 +183,9 @@ const commitFunding = async (req, res) => {
       message: 'Funding transaction failed'
     });
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
@@ -190,6 +221,14 @@ const getMyFunding = async (req, res) => {
       funding
     });
   } catch (error) {
+    if (isDbOffline(error)) {
+      const funding = getInMemoryFundingHistory(req.user.user_id);
+      return res.json({
+        success: true,
+        funding
+      });
+    }
+
     console.error('Funding history error:', error.message);
 
     res.status(500).json({

@@ -1,5 +1,6 @@
 const pool = require('../config/db');
-const { inMemoryTickets } = require('../services/inMemoryStore');
+const { inMemoryTickets, inMemoryNotifications, inMemoryOrganizations } = require('../services/inMemoryStore');
+const { isDbOffline } = require('../utils/dbFallback');
 
 const getMyNotifications = async (req, res) => {
   try {
@@ -43,32 +44,45 @@ const getMyNotifications = async (req, res) => {
       [req.user.user_id]
       );
       notifications = rows;
-    } catch {
-      notifications = inMemoryTickets.map((t, idx) => ({
-        notif_id: idx + 1,
-        ticket_id: t.ticket_id,
-        org_id: 1,
-        distance_km: (3.2 + idx * 2.5).toFixed(1),
-        status: 'notified',
-        notified_at: t.created_at || new Date(),
-        pincode: t.pincode,
-        expected_patient_count: t.expected_patient_count,
-        health_focus_area: t.health_focus_area,
-        preferred_date_from: t.preferred_date_from,
-        preferred_date_to: t.preferred_date_to,
-        urgency: t.urgency,
-        village_head_consent: t.village_head_consent,
-        venue_available: t.venue_available,
-        venue_type: t.venue_type,
-        local_contact_name: t.local_contact_name,
-        local_contact_phone: t.local_contact_phone,
-        electricity_available: t.electricity_available,
-        water_available: t.water_available,
-        local_volunteer_count: t.local_volunteer_count,
-        additional_details: t.additional_details,
-        organization_name: 'Government Hospital Vellore',
-        organization_type: 'Hospital'
-      }));
+    } catch (dbErr) {
+      if (!isDbOffline(dbErr)) {
+        throw dbErr;
+      }
+
+      notifications = inMemoryNotifications
+        .filter(n => n.status === 'notified')
+        .map(n => {
+          const t = inMemoryTickets.find(ticket => ticket.ticket_id === n.ticket_id) || {};
+          const org = inMemoryOrganizations.find(o => o.org_id === n.org_id) || {
+            name: 'Government Hospital Vellore',
+            type: 'Hospital'
+          };
+          return {
+            notif_id: n.notif_id,
+            ticket_id: n.ticket_id,
+            org_id: n.org_id,
+            distance_km: n.distance_km,
+            status: n.status,
+            notified_at: n.notified_at || new Date(),
+            pincode: t.pincode,
+            expected_patient_count: t.expected_patient_count,
+            health_focus_area: t.health_focus_area,
+            preferred_date_from: t.preferred_date_from,
+            preferred_date_to: t.preferred_date_to,
+            urgency: t.urgency,
+            village_head_consent: t.village_head_consent,
+            venue_available: t.venue_available,
+            venue_type: t.venue_type,
+            local_contact_name: t.local_contact_name,
+            local_contact_phone: t.local_contact_phone,
+            electricity_available: t.electricity_available,
+            water_available: t.water_available,
+            local_volunteer_count: t.local_volunteer_count,
+            additional_details: t.additional_details,
+            organization_name: org.name,
+            organization_type: org.type
+          };
+        });
     }
 
     const formattedNotifications = notifications.map(notif => {

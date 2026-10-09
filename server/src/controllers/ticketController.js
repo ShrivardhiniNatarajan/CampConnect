@@ -5,7 +5,7 @@ const {
 const {
   calculateTicketTrustScore
 } = require('../services/trustworthinessMLService');
-const { inMemoryTickets } = require('../services/inMemoryStore');
+const { inMemoryTickets, createInMemoryNotificationForTicket } = require('../services/inMemoryStore');
 
 const VALID_URGENCY = ['low', 'medium', 'high'];
 
@@ -270,6 +270,7 @@ const createTicket = async (req, res) => {
         created_at: new Date()
       };
       inMemoryTickets.unshift(memTicket);
+      createInMemoryNotificationForTicket(memTicket);
     }
 
     res.status(201).json({

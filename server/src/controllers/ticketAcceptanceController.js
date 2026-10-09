@@ -1,13 +1,15 @@
 const pool = require('../config/db');
+const { acceptInMemoryNotification, rejectInMemoryNotification } = require('../services/inMemoryStore');
+const { isDbOffline } = require('../utils/dbFallback');
 
 const acceptNotification = async (req, res) => {
-  const connection = await pool.getConnection();
+  const { id } = req.params;
+  const orgAdminId = req.user.user_id;
 
+  let connection;
   try {
+    connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    const { id } = req.params;
-    const orgAdminId = req.user.user_id;
 
     // Find the notification and verify that it belongs
     // to the organization controlled by this org_admin.
@@ -142,7 +144,25 @@ const acceptNotification = async (req, res) => {
       }
     });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      try { await connection.rollback(); } catch {}
+    }
+
+    if (isDbOffline(error)) {
+      try {
+        const camp = acceptInMemoryNotification(id, orgAdminId);
+        return res.status(201).json({
+          success: true,
+          message: 'Notification accepted and camp created successfully',
+          camp
+        });
+      } catch (memErr) {
+        return res.status(memErr.status || 500).json({
+          success: false,
+          message: memErr.message || 'Notification acceptance failed'
+        });
+      }
+    }
 
     console.error('Notification acceptance error:', error.message);
 
@@ -151,18 +171,20 @@ const acceptNotification = async (req, res) => {
       message: 'Notification acceptance failed'
     });
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
 const rejectNotification = async (req, res) => {
-  const connection = await pool.getConnection();
+  const { id } = req.params;
+  const orgAdminId = req.user.user_id;
 
+  let connection;
   try {
+    connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    const { id } = req.params;
-    const orgAdminId = req.user.user_id;
 
     // Find and lock the notification belonging to this organization.
     const [notifications] = await connection.query(
@@ -236,8 +258,7 @@ const rejectNotification = async (req, res) => {
       [notification.notif_id]
     );
 
-    // If no organizations remain to respond, mark the ticket
-    // as rejected_all.
+    // If no organizations remain to respond, mark the ticket as rejected_all.
     const [remainingNotifications] = await connection.query(
       `SELECT notif_id
        FROM ticket_notifications
@@ -263,7 +284,24 @@ const rejectNotification = async (req, res) => {
       message: 'Notification rejected successfully'
     });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      try { await connection.rollback(); } catch {}
+    }
+
+    if (isDbOffline(error)) {
+      try {
+        rejectInMemoryNotification(id, orgAdminId);
+        return res.json({
+          success: true,
+          message: 'Notification rejected successfully'
+        });
+      } catch (memErr) {
+        return res.status(memErr.status || 500).json({
+          success: false,
+          message: memErr.message || 'Notification rejection failed'
+        });
+      }
+    }
 
     console.error('Notification rejection error:', error.message);
 
@@ -272,7 +310,9 @@ const rejectNotification = async (req, res) => {
       message: 'Notification rejection failed'
     });
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 

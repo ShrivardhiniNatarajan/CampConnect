@@ -1,14 +1,38 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { CheckSquare, History } from 'lucide-react';
 
 const Dashboard = () => {
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Coordinator Dashboard</h1>
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Platform Coordinator Dashboard</h1>
+        <p className="text-gray-500 mt-1">Review camp completion reports, verify proof photos, and audit past camps.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link to="/coordinator/reports/pending" className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition border border-gray-100">
-          <h3 className="text-lg font-semibold text-blue-600">Pending Reports</h3>
-          <p className="text-gray-600 mt-2">View and verify camp completion reports submitted by organizations.</p>
+        <Link to="/coordinator/reports/pending" className="block p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100 group">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              <CheckSquare className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Pending Reports</h3>
+          </div>
+          <p className="text-gray-600 mt-2 text-sm leading-relaxed">
+            Review and verify camp completion reports submitted by organizations with patient counts and photo evidence.
+          </p>
+        </Link>
+
+        <Link to="/coordinator/history" className="block p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100 group">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-600 group-hover:text-white transition-colors">
+              <History className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Verification History</h3>
+          </div>
+          <p className="text-gray-600 mt-2 text-sm leading-relaxed">
+            Browse the historical audit log of all verified health camps and approved field operations.
+          </p>
         </Link>
       </div>
     </div>

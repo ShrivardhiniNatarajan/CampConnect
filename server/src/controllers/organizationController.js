@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const { inMemoryOrganizations } = require('../services/inMemoryStore');
+const { isDbOffline } = require('../utils/dbFallback');
 
 const createOrganization = async (req, res) => {
   try {
@@ -62,48 +64,76 @@ const createOrganization = async (req, res) => {
       });
     }
 
-    // One org_admin can be linked to only one organization.
-    const [existingOrg] = await pool.query(
-      'SELECT org_id FROM organizations WHERE org_admin_id = ?',
-      [req.user.user_id]
-    );
+    let orgId;
+    try {
+      // One org_admin can be linked to only one organization.
+      const [existingOrg] = await pool.query(
+        'SELECT org_id FROM organizations WHERE org_admin_id = ?',
+        [req.user.user_id]
+      );
 
-    if (existingOrg.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'This org_admin already has an organization'
-      });
-    }
+      if (existingOrg.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: 'This org_admin already has an organization'
+        });
+      }
 
-    const [result] = await pool.query(
-      `INSERT INTO organizations
-        (
-          org_admin_id,
+      const [result] = await pool.query(
+        `INSERT INTO organizations
+          (
+            org_admin_id,
+            name,
+            type,
+            location,
+            pincode,
+            specialization,
+            capacity
+          )
+         VALUES (?, ?, ?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?)`,
+        [
+          req.user.user_id,
           name,
           type,
-          location,
+          lon,
+          lat,
           pincode,
-          specialization,
-          capacity
-        )
-       VALUES (?, ?, ?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?)`,
-      [
-        req.user.user_id,
+          specialization || null,
+          organizationCapacity
+        ]
+      );
+      orgId = result.insertId;
+    } catch (dbErr) {
+      if (!isDbOffline(dbErr)) throw dbErr;
+
+      const existingMemOrg = inMemoryOrganizations.find(o => o.org_admin_id === req.user.user_id);
+      if (existingMemOrg) {
+        return res.status(409).json({
+          success: false,
+          message: 'This org_admin already has an organization'
+        });
+      }
+
+      orgId = inMemoryOrganizations.length + 1;
+      inMemoryOrganizations.push({
+        org_id: orgId,
+        org_admin_id: req.user.user_id,
         name,
         type,
-        lon,
-        lat,
+        latitude: lat,
+        longitude: lon,
         pincode,
-        specialization || null,
-        organizationCapacity
-      ]
-    );
+        specialization: specialization || null,
+        capacity: organizationCapacity,
+        created_at: new Date()
+      });
+    }
 
     res.status(201).json({
       success: true,
       message: 'Organization registered successfully',
       organization: {
-        org_id: result.insertId,
+        org_id: orgId,
         org_admin_id: req.user.user_id,
         name,
         type,
@@ -128,34 +158,51 @@ const getOrganization = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [organizations] = await pool.query(
-      `SELECT
-        org_id,
-        org_admin_id,
-        name,
-        type,
-        ST_Y(location) AS latitude,
-        ST_X(location) AS longitude,
-        pincode,
-        specialization,
-        capacity,
-        created_at
-       FROM organizations
-       WHERE org_id = ?`,
-      [id]
-    );
+    try {
+      const [organizations] = await pool.query(
+        `SELECT
+          org_id,
+          org_admin_id,
+          name,
+          type,
+          ST_Y(location) AS latitude,
+          ST_X(location) AS longitude,
+          pincode,
+          specialization,
+          capacity,
+          created_at
+         FROM organizations
+         WHERE org_id = ?`,
+        [id]
+      );
 
-    if (organizations.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Organization not found'
+      if (organizations.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Organization not found'
+        });
+      }
+
+      return res.json({
+        success: true,
+        organization: organizations[0]
+      });
+    } catch (dbErr) {
+      if (!isDbOffline(dbErr)) throw dbErr;
+
+      const org = inMemoryOrganizations.find(o => String(o.org_id) === String(id));
+      if (!org) {
+        return res.status(404).json({
+          success: false,
+          message: 'Organization not found'
+        });
+      }
+
+      return res.json({
+        success: true,
+        organization: org
       });
     }
-
-    res.json({
-      success: true,
-      organization: organizations[0]
-    });
   } catch (error) {
     console.error('Organization fetch error:', error.message);
 
