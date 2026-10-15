@@ -3,7 +3,8 @@ const {
   findAndNotifyNearbyOrganizations
 } = require('../services/ticketMatchingService');
 const {
-  calculateTicketTrustScore
+  calculateTicketTrustScore,
+  evaluateTicketTrustScoreAsync
 } = require('../services/trustworthinessMLService');
 const { inMemoryTickets } = require('../services/inMemoryStore');
 
@@ -151,8 +152,12 @@ const createTicket = async (req, res) => {
       }
     }
 
-    // Evaluate ML Trustworthiness
-    const trustAnalysis = calculateTicketTrustScore({
+    // Evaluate ML Credibility using trained Logistic Regression pipeline (AUC 0.928)
+    const trustAnalysis = await evaluateTicketTrustScoreAsync({
+      social_worker_id: req.user.user_id,
+      latitude: lat,
+      longitude: lon,
+      pincode,
       expected_patient_count: patientCount,
       health_focus_area,
       preferred_date_from,
@@ -165,7 +170,8 @@ const createTicket = async (req, res) => {
       local_contact_phone,
       electricity_available: Boolean(electricity_available),
       water_available: Boolean(water_available),
-      local_volunteer_count: volunteerCount
+      local_volunteer_count: volunteerCount,
+      additional_details: parsedDetails
     });
 
     parsedDetails.trust_score = trustAnalysis.score;

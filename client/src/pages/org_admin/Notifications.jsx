@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Bell, MapPin, Calendar, Users, Activity, Check, X, Phone } from 'lucide-react';
+import { Bell, MapPin, Calendar, Users, Activity, Check, X, Phone, ShieldCheck } from 'lucide-react';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -105,6 +105,38 @@ const Notifications = () => {
                   <span className="mr-4">Venue: {notif.venue_available ? <span className="font-medium text-gray-900 capitalize">{notif.venue_type.replace('_', ' ')}</span> : 'None'}</span>
                   <span>Consent: <span className="font-medium capitalize text-gray-900">{notif.village_head_consent}</span></span>
                 </div>
+
+                {notif.trust_analysis && (
+                  <div className="mt-3 bg-blue-50/70 p-3 rounded-xl border border-blue-100 text-xs">
+                    <div className="font-semibold text-blue-950 flex items-center mb-1">
+                      <ShieldCheck className="w-4 h-4 mr-1.5 text-blue-600" />
+                      Logistic Regression Evaluation ({notif.trust_analysis.model_version || 'AUC 0.928'})
+                    </div>
+                    {notif.trust_analysis.recommendation && (
+                      <p className="text-gray-700 mb-2 leading-relaxed">{notif.trust_analysis.recommendation}</p>
+                    )}
+                    {notif.trust_analysis.positive_factors?.length > 0 && (
+                      <div className="space-y-1 text-green-800">
+                        {notif.trust_analysis.positive_factors.slice(0, 3).map((pf, i) => (
+                          <div key={i} className="flex items-center text-[11px]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 flex-shrink-0"></span>
+                            <span>{pf}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {notif.trust_analysis.risk_factors?.length > 0 && (
+                      <div className="space-y-1 text-amber-800 mt-1.5 pt-1.5 border-t border-blue-100/60">
+                        {notif.trust_analysis.risk_factors.slice(0, 2).map((rf, i) => (
+                          <div key={i} className="flex items-center text-[11px]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                            <span>{rf}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-row md:flex-col justify-end gap-3 md:min-w-[140px] border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">

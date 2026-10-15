@@ -1,12 +1,16 @@
 const {
   calculateTicketTrustScore,
+  evaluateTicketTrustScoreAsync,
   evaluateUserTrustProfile
 } = require('../services/trustworthinessMLService');
 
-const evaluateDraftTicket = (req, res) => {
+const evaluateDraftTicket = async (req, res) => {
   try {
-    const ticketData = req.body;
-    const analysis = calculateTicketTrustScore(ticketData);
+    const ticketData = {
+      ...req.body,
+      social_worker_id: req.user?.user_id || req.body?.social_worker_id
+    };
+    const analysis = await evaluateTicketTrustScoreAsync(ticketData);
 
     res.json({
       success: true,
@@ -14,10 +18,18 @@ const evaluateDraftTicket = (req, res) => {
     });
   } catch (error) {
     console.error('Error in evaluateDraftTicket:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to evaluate ticket trustworthiness'
-    });
+    try {
+      const fallbackAnalysis = calculateTicketTrustScore(req.body);
+      return res.json({
+        success: true,
+        analysis: fallbackAnalysis
+      });
+    } catch {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to evaluate ticket credibility'
+      });
+    }
   }
 };
 

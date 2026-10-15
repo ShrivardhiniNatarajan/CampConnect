@@ -356,7 +356,7 @@ const CreateTicket = () => {
                 <option value="pending">Pending (In discussions with local head)</option>
                 <option value="declined">Declined</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">Confirmed consent boosts request trust score significantly.</p>
+              <p className="text-xs text-gray-500 mt-1">Confirmed consent boosts request credibility and prioritization significantly.</p>
             </div>
           </div>
         </div>
